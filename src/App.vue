@@ -11,12 +11,12 @@
 			</div>
 		</div>
 
-		<list :todos="todos" :total="totalTodo" @doneToDo="doneTodo" @deleteToDo="deleteTodo"></list>
+		<list :todos="list" :total="totalTodo" @doneToDo="doneTodo" @deleteToDo="deleteTodo"></list>
 
 		<div
 			:class="totalTodo == 0 ? 'd-flex justify-content-between align-items-center my-3' : 'd-flex justify-content-between align-items-center'">
 			<small>Total ToDo : {{ totalTodo }}</small>
-			<button type="button" class="btn btn-sm btn-danger" v-if="totalTodo" @click="destroyToDo">
+			<button type="button" class="btn btn-sm btn-danger" v-if="totalTodo" @click="destroyTodo">
 				<i class="bi bi-trash"></i>
 			</button>
 		</div>
@@ -24,57 +24,71 @@
 </template>
 
 <script>
+import { computed, onBeforeMount, onMounted, reactive, ref, toRefs } from 'vue';
 import List from './components/List.vue';
 
 export default {
-	data() {
-		return {
-			todo: '',
-			todos: [],
-		}
-	},
-	mounted() {
-		this.todos = JSON.parse(localStorage.getItem('todos'))
-	},
 	components: { List },
-	methods: {
-		addTodo() {
-			this.todos.unshift({
-				activity: this.todo,
+	setup() {
+		const todo = ref('')
+		const todos = reactive({
+			list: []
+		})
+
+		onBeforeMount(() => {
+			if (JSON.parse(localStorage.getItem('todos'))) {
+				return true
+			}
+
+			saveLocalStorage()
+		})
+		
+		onMounted(() => {
+			todos.list = JSON.parse(localStorage.getItem('todos'))
+		})
+
+		const addTodo = () => {
+			todos.list.unshift({
+				activity: todo.value,
 				isDone: false,
 			})
 
-			this.todo = ''
+			todo.value = ''
 
-			this.saveLocalStorage()
-		},
-		doneTodo(indexTodo) {
-			this.todos[indexTodo].isDone = !this.todos[indexTodo].isDone
+			saveLocalStorage()
+		}
 
-			this.saveLocalStorage()
-		},
-		deleteTodo(indexTodo) {
-			this.todos = this.todos.filter((item, index) => {
+		const doneTodo = (indexTodo) => {
+			todos.list[indexTodo].isDone = !todos.list[indexTodo].isDone
+
+			saveLocalStorage()
+		}
+
+		const deleteTodo = (indexTodo) => {
+			todos.list = todos.list.filter((item, index) => {
 				if (index != indexTodo) {
 					return true
 				}
 			})
 
-			this.saveLocalStorage()
-		},
-		destroyToDo() {
-			this.todos = []
+			saveLocalStorage()
+		}
 
-			this.saveLocalStorage()
-		},
-		saveLocalStorage() {
-			localStorage.setItem('todos', JSON.stringify(this.todos))
+		const destroyTodo = () => {
+			todos.list = []
+
+			saveLocalStorage()
 		}
-	},
-	computed: {
-		totalTodo() {
-			return this.todos.length
+
+		const saveLocalStorage = () => {
+			localStorage.setItem('todos', JSON.stringify(todos.list))
 		}
+
+		const totalTodo = computed(() => {
+			return todos.list.length
+		})
+
+		return { todo, ...toRefs(todos), addTodo, doneTodo, deleteTodo, destroyTodo, totalTodo }
 	},
 }
 </script>

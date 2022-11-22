@@ -29,13 +29,16 @@ export default {
 		},
 		total: Number,
 	},
-	methods: {
-		doneToDo(index) {
-			this.$emit('doneToDo', index)
-		},
-		deleteToDo(index) {
-			this.$emit('deleteToDo', index)
+	setup(props, { emit }) {
+		const doneToDo = (index) => {
+			emit('doneToDo', index)
 		}
-	},
+
+		const deleteToDo = (index) => {
+			emit('deleteToDo', index)
+		}
+
+		return { doneToDo, deleteToDo}
+	}
 }
 </script>
